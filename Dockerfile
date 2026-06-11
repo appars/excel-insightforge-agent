@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy application code
 COPY config.py app.py ./
 COPY services/ ./services/
+COPY .streamlit/ ./.streamlit/
 
 RUN chown -R app:app /app
 USER app
