@@ -1,0 +1,11 @@
+[server]
+headless = true
+enableXsrfProtection = false   # required: file upload behind proxies / port-forward / NodePort
+enableCORS = false
+maxUploadSize = 200            # MB
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#0f766e"
