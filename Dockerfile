@@ -7,7 +7,7 @@
 FROM python:3.11-slim AS base
 
 # Security: run as non-root
-RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app
+RUN groupadd -g 10001 app && useradd -u 10001 -g app -d /app -s /sbin/nologin app
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ COPY services/ ./services/
 COPY .streamlit/ ./.streamlit/
 
 RUN chown -R app:app /app
-USER app
+USER 10001
 
 EXPOSE 8501
 
