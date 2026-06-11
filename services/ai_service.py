@@ -15,6 +15,7 @@ rule-based outputs from services.analytics.
 from __future__ import annotations
 
 import json
+import re
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
@@ -181,21 +182,37 @@ def _build_tools(
 
 
 def _parse_action(text: str) -> Optional[Dict[str, Any]]:
-    """Extract the first JSON object from the LLM's reply."""
+    """Extract the first JSON object from the LLM's reply.
+
+    Tolerant of common LLM quirks: unescaped newlines inside strings
+    and a 'final' answer whose JSON is malformed (extracted by regex).
+    """
     start = text.find("{")
     if start == -1:
         return None
     depth = 0
+    candidate = None
     for i in range(start, len(text)):
         if text[i] == "{":
             depth += 1
         elif text[i] == "}":
             depth -= 1
             if depth == 0:
-                try:
-                    return json.loads(text[start : i + 1])
-                except json.JSONDecodeError:
-                    return None
+                candidate = text[start : i + 1]
+                break
+    if candidate is None:
+        candidate = text[start:]
+    for attempt in (candidate, candidate.replace("\n", "\\n").replace("\t", "\\t")):
+        try:
+            return json.loads(attempt, strict=False)
+        except json.JSONDecodeError:
+            continue
+    # Last resort: pull the answer straight out of a 'final' action.
+    m = re.search(r'"action"\s*:\s*"final"\s*,\s*"answer"\s*:\s*"(.*)', text, re.S)
+    if m:
+        answer = m.group(1)
+        answer = re.sub(r'"\s*}\s*$', "", answer.strip())
+        return {"action": "final", "answer": answer.replace("\\n", "\n")}
     return None
 
 
