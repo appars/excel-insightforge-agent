@@ -5,7 +5,7 @@ metadata:
   labels:
     app: excel-insightforge-agent
 spec:
-  replicas: 5
+  replicas: 8
   selector:
     matchLabels:
       app: excel-insightforge-agent
